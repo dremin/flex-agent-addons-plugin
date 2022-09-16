@@ -1,0 +1,30 @@
+{
+  "target1": [
+    {
+      "address": "siptarget1a.sip.twilio.com",
+      "tnxSid": "1111"
+    },
+    {
+      "address": "siptarget1b.sip.twilio.com",
+      "tnxSid": "2222"
+    },
+    {
+      "address": "siptarget1c.sip.twilio.com",
+      "tnxSid": "3333"
+    }
+  ],
+  "target2": [
+    {
+      "address": "siptarget2a.sip.twilio.com",
+      "tnxSid": "4444"
+    },
+    {
+      "address": "siptarget2b.sip.twilio.com",
+      "tnxSid": "5555"
+    },
+    {
+      "address": "siptarget2c.sip.twilio.com",
+      "tnxSid": "6666"
+    }
+  ]
+}
