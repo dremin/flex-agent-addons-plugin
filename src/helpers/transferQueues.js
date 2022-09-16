@@ -50,12 +50,18 @@ const generateLobAndChannelQueueFilterExpression = (queueName, taskChannelName) 
 
   let expression = "";
   let matchingLobFilter = [];
+  let matchingLobFilterKey = "";
   let matchingChannelFilter = channelTransferQueueFilter[taskChannelName] || [];
   let matchingQueues = [];
 
   for (const key of Object.keys(lobTransferQueueFilter)) {
     if (queueName?.toLowerCase().startsWith(key.toLowerCase())) {
-      matchingLobFilter = lobTransferQueueFilter[key];
+      if (key.length > matchingLobFilterKey.length) {
+        // In case there are multiple possible matches for a queue name,
+        // we want the most expressive match
+        matchingLobFilterKey = key;
+        matchingLobFilter = lobTransferQueueFilter[key];
+      }
     }
   }
 

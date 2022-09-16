@@ -66,18 +66,41 @@ This feature is implemented using Twilio Sync, by creating a Sync Doc per reserv
 
 ### Internal transfer add-ons
 
-These features are documented [here](https://github.com/trogers-twilio/flex-internal-transfer-addons).
-
 This solution provides the following enhancements / modifications to the Flex native internal transfer experience:
 
-1. Removes the Agents tab in the transfer directory, so agents are not able to transfer directly to other agents
+1. Removes the Agents tab in the transfer directory, so agents are not able to transfer directly to other agents. The tab can be conditionally displayed to agents based on their skills.
 1. Hides a configurable list of Queues from the Queues tab of the transfer directory
 1. Adds support for an Hours of Operations check on each queue. Displays a CLOSED message with hours of operation on each closed queue on the Queues tab of the transfer directory, and shows a closed notification with hours of operation if the agent tries transferring to a closed queue.
 1. Sets the priority of a transferred task to the same priority used for new inbound tasks of the target transfer queue
+1. Supports filtering the list of queues in the transfer directory based on the selected task's queue name and task channel
 
 #### Hidden Agent Tab in Transfer Directory
 
-No configuration is required for this feature. The Agents tab is removed for all Flex users.
+The Agents tab can be disabled globally for all agents, then conditionally shown to only agents with specific skills. This is controlled in the [Flex Configuration](https://www.twilio.com/docs/flex/developer/ui/configuration#modifying-configuration-for-flextwiliocom) property `ui_attributes.internalTransferAddonsPlugin.agentTransferDirectory`.
+
+Within that parent property, the following properties can be configured:
+
+* `isGloballyDisabled`: boolean
+  * If `true`, will remove the Agents tab from the transfer directory for all agents, except those with a skill matching one defined in `enabledSkills`
+* `enabledSkills`: Array of strings
+  * If an agent has at least one skill matching a skill defined in this array, then the Agents tab will not be removed from the transfer directory even if `isGloballyDisabled` is set to `true`
+
+> NOTE: Skill names in the `enabledSkills` array are case sensitive. They must match the agent skill name exactly.
+
+Here is an example config for the parent property:
+
+```json
+"internalTransferAddonsPlugin": {
+  ...,
+  "agentTransferDirectory": {
+    "isGloballyDisabled": true,
+    "enabledSkills": [
+      "Skill_1",
+      "Skill_2"
+    ]
+  }
+}
+```
 
 #### Hidden Queues in Transfer Directory
 
@@ -91,6 +114,7 @@ Here is an example config for this property:
 
 ```json
 "internalTransferAddonsPlugin": {
+  ...,
   "hiddenTransferQueues": [
     "HiddenQueueName1",
     "HiddenQueueName2",
@@ -293,6 +317,146 @@ If multiple routing steps are found referencing the target TaskQueue, the highes
 If no routing steps are found referencing the target TaskQueue, the transferred task's priority is not changed.
 
 > NOTE: This feature is only designed to work with task priorities controlled by Workflow routing steps. If task priorities are being set in other ways, such as at task creation, the plugin will not be aware of it and it may result in the "stuck" task scenario described above.
+
+#### Filtering Transfer Queues by Selected Task Line of Business and TaskChannel
+
+For contact centers that support multiple lines of business (LOB) and / or multiple channels (such as voice and chat), filtering the list of queues in the transfer directory to only those queues associated with the selected task's line of business and TaskChannel can improve agent efficient and reduce transfers to the wrong queue. This capability is offered through two different [Flex Configuration](https://www.twilio.com/docs/flex/developer/ui/configuration#modifying-configuration-for-flextwiliocom) properties.
+
+##### Filtering by Line of Business
+
+The line of business filter is controlled with the property `ui_attributes.internalTransferAddonsPlugin.lobTransferQueueFilter`. Each key in this object is the starting name of the queue to match. The value of each key is an array of strings containing partial names of queues to show in the transfer directory. To exclude queues, start the string with `"!"`.
+
+For example, let's say we have three lines of business: "Shoes", "Computers", and "Hats". Here's a sample config to ensure the transfer directory only shows queues associated with the selected task's line of business:
+
+```json
+"internalTransferAddonsPlugin": {
+  ...,
+  "lobTransferQueueFilter": {
+    "Shoes": [
+      "Shoes"
+    ],
+    "Computers": [
+      "Computers"
+    ],
+    "Hats": [
+      "Hats"
+    ]
+  }
+}
+```
+
+Now let's say we have a general support queue called "Apparel Support" that we want to be able to transfer to either the "Shoes" or "Hats" queue, but not "Computers". That configuration could look like this:
+
+```json
+"internalTransferAddonsPlugin": {
+  ...,
+  "lobTransferQueueFilter": {
+    "Shoes": [
+      "Shoes"
+    ],
+    "Computers": [
+      "Computers"
+    ],
+    "Hats": [
+      "Hats"
+    ],
+    "Apparel Support": [
+      "Shoes",
+      "Hats"
+    ]
+  }
+}
+```
+
+Now let's say there is a queue called "Computers After Hours Support" that should be excluded from the "Computers" line of business transfer list. The configuration could be updated like this:
+
+```json
+"internalTransferAddonsPlugin": {
+  ...,
+  "lobTransferQueueFilter": {
+    "Shoes": [
+      "Shoes"
+    ],
+    "Computers": [
+      "Computers"
+      "!After Hours"
+    ],
+    "Hats": [
+      "Hats"
+    ],
+    "Apparel Support": [
+      "Shoes",
+      "Hats"
+    ]
+  }
+}
+```
+
+By prefixing "After Hours" with "!", any queues that made it into the matched queue list via "Computers" will be removed from the list if they contain "After Hours" in their name.
+
+If there are multiple matches of the object key to the queue name, then the key with the most characters will be the one used. This allows for easily overriding the "higher level" config for a specific queue.
+
+For example, let's say we have multiple queues for the "Computers" line of business, such as "Computers Sales", "Computers Support", "Computers Escalation", and "Computers Apparel". In this example, the "Computers Apparel" queue provides support for the "Shoes" and "Hats" lines of business, so we want it to have access to transfer to those queues and vice versa, but the other "Computers" queues should still only be able to transfer to other "Computers" queues only. The configuration would look like this:
+
+```json
+"internalTransferAddonsPlugin": {
+  ...,
+  "lobTransferQueueFilter": {
+    "Shoes": [
+      "Shoes",
+      "Computers Apparel"
+    ],
+    "Computers": [
+      "Computers"
+      "!After Hours"
+    ],
+    "Computers Apparel": [
+      "Computers",
+      "Hats",
+      "Shoes",
+      "!After Hours"
+    ],
+    "Hats": [
+      "Hats",
+      "Computers Apparel"
+    ],
+    "Apparel Support": [
+      "Shoes",
+      "Hats"
+    ]
+  }
+}
+```
+
+Keep in mind the object key is used in a `startsWith()` condition, so it will only match queues whose name begins with that key. The strings in the array value, however, can exist anywhere in the queue name.
+
+This filter works in tandem with the TaskChannel name filter described below. If both filters are configured, queue names have to match both filter criteria to be visible in transfer directory.
+
+##### Filtering by TaskChannel Name
+
+The TaskChannel filter is controlled by the property `ui_attributes.internalTransferAddonsPlugin.channelTransferQueueFilter`. Each key in this object is the task channel unique name to match. The value of each key is an array of strings containing partial names of queues to show in the transfer directory. To exclude queues, start the string with `"!"`.
+
+This feature is primarily applicable to contact centers that separate their queues by channel. 
+
+For example, let's say our contact center supports two channels, voice and chat. Our voice queues don't have any special identifier in the name, but all of our chat queues have the word "Chat" in them to set them apart. We only want voice queues to show up in the directory when transferring a voice task, and only chat queues to show in the directory when transferring a chat task. Our configuration could look like this:
+
+```json
+"internalTransferAddonsPlugin": {
+  ...,
+  "channelTransferQueueFilter": {
+    "voice": [
+      "!Chat"
+    ],
+    "chat": [
+      "Chat"
+    ]
+  }
+}
+```
+
+The object keys of "voice" and "chat" match the unique name of those TaskChannels. For "voice", since there isn't anything unique in the queue names to identify them as voice queues, we're simply excluding all queues containing the word "Chat". For "chat", we're doing the opposite and only including queues containing the word "Chat".
+
+This filter works in tandem with the line of business filter described above. If both filters are configured, queue names have to match both filter criteria to be visible in transfer directory.
 
 ### SIP Failover
 
