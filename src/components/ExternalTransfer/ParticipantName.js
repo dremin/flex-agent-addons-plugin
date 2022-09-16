@@ -27,12 +27,26 @@ class ParticipantName extends React.Component {
   state = {
     name: ''
   };
+  
+  formatName(name) {
+    if (name.startsWith('sip:')) {
+      try {
+        name = name.match(/^(sips?):([^@]+)(?:@(.+))?$/)[2];
+      } catch {
+        // keep it as-is
+      }
+    }
+    
+    return name;
+  }
 
   componentDidMount() {
     const { participant, task } = this.props;
 
     if (participant.participantType === 'customer') {
-      this.setState({ name: task.attributes.outbound_to || task.attributes.name || task.attributes.from });
+      let name = task.attributes.outbound_to || task.attributes.name || task.attributes.from;
+      name = this.formatName(name);
+      this.setState({ name });
       return;
     }
     // Flex UI 2.0 returns an undefined participantType instead of expected value "unknown"
@@ -40,7 +54,8 @@ class ParticipantName extends React.Component {
       ConferenceService.getCallProperties(participant.callSid)
         .then(response => {
           if (response) {
-            const name = (response && response.to) || 'Unknown';
+            let name = (response && response.to) || 'Unknown';
+            name = this.formatName(name);
             this.setState({ name });
           }
         })
