@@ -9,6 +9,7 @@ exports.handler = TokenValidator(async (context, event, callback) => {
   const requiredParameters = [
       { key: 'callSid', purpose: 'unique ID of call to update' },
       { key: 'to', purpose: 'phone number to transfer to' },
+      { key: 'from', purpose: 'phone number for caller ID' },
   ];
   const parameterError = ParameterValidator.validate(context.PATH, event, requiredParameters);
 
@@ -28,7 +29,8 @@ exports.handler = TokenValidator(async (context, event, callback) => {
   try {
     const {
         callSid,
-        to
+        to,
+        from
     } = event;
     
     const result = await VoiceOperations.coldTransfer(
@@ -37,6 +39,7 @@ exports.handler = TokenValidator(async (context, event, callback) => {
         scriptName,
         callSid,
         to,
+        from,
         attempts: 0
       });
 

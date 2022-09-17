@@ -218,11 +218,12 @@ class ConferenceService extends ApiService {
     });
   }
 
-  coldTransfer = async (callSid, to) => {
+  coldTransfer = async (callSid, to, from) => {
     return new Promise((resolve, reject) => {
       const encodedParams = {
         callSid,
-        to,
+        to: encodeURIComponent(to),
+        from: encodeURIComponent(from),
         Token: encodeURIComponent(this.manager.store.getState().flex.session.ssoTokenPayload.token)
       };
   
@@ -243,12 +244,13 @@ class ConferenceService extends ApiService {
     });
   }
   
-  coldTransferSip = async (callSid, to, sipTarget) => {
+  coldTransferSip = async (callSid, to, from, sipTarget) => {
     return new Promise((resolve, reject) => {
       const encodedParams = {
         callSid,
-        to,
-        sipTarget,
+        to: encodeURIComponent(to),
+        from: encodeURIComponent(from),
+        sipTarget: encodeURIComponent(sipTarget),
         Token: encodeURIComponent(this.manager.store.getState().flex.session.ssoTokenPayload.token)
       };
   

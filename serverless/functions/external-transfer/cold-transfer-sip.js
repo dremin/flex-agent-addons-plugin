@@ -9,6 +9,7 @@ exports.handler = TokenValidator(async (context, event, callback) => {
   const requiredParameters = [
       { key: 'callSid', purpose: 'unique ID of call to update' },
       { key: 'to', purpose: 'phone number to transfer to' },
+      { key: 'from', purpose: 'phone number for caller ID' },
   ];
   const parameterError = ParameterValidator.validate(context.PATH, event, requiredParameters);
 
@@ -29,6 +30,7 @@ exports.handler = TokenValidator(async (context, event, callback) => {
     const {
         callSid,
         to,
+        from,
         sipTarget
     } = event;
     
@@ -50,6 +52,7 @@ exports.handler = TokenValidator(async (context, event, callback) => {
         callSid,
         to,
         toSip,
+        from,
         sipTarget,
         failoverAttempt,
         attempts: 0

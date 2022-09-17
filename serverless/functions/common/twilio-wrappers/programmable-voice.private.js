@@ -46,12 +46,13 @@ exports.fetchProperties = async (parameters) => {
  * @param {object} parameters.context the context from calling lambda function
  * @param {string} parameters.callSid the unique call SID to fetch
  * @param {string} parameters.to the phone number to transfer to
+ * @param {string} parameters.from the phone number for caller ID
  * @returns {object} generic response object
  * @description cold transfers the given call SID to the given phone number
  */
 exports.coldTransfer = async (parameters) => {
     
-    const { context, callSid, to } = parameters;
+    const { context, callSid, to, from } = parameters;
 
     if(!isObject(context))
         throw "Invalid parameters object passed. Parameters must contain reason context object";
@@ -59,6 +60,8 @@ exports.coldTransfer = async (parameters) => {
         throw "Invalid parameters object passed. Parameters must contain callSid string";
     if(!isString(to))
         throw "Invalid parameters object passed. Parameters must contain to string";
+    if(!isString(from))
+        throw "Invalid parameters object passed. Parameters must contain from string";
 
     try {
         const client = context.getTwilioClient();
@@ -66,7 +69,7 @@ exports.coldTransfer = async (parameters) => {
         await client
           .calls(callSid)
           .update({
-            twiml: `<Response><Dial>${to}</Dial></Response>`
+            twiml: `<Response><Dial callerId="${from}">${to}</Dial></Response>`
           });
 
         return { success: true, status: 200 };

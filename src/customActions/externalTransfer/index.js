@@ -16,11 +16,18 @@ export const kickExternalTransferParticipant = (payload) => {
 export const doColdTransfer = async (payload) => {
     const { task, to, sipTarget } = payload;
     const callSid = task.attributes.call_sid;
+    let { from } = payload;
+    
+    if (task && task.attributes && task.attributes.from && !task.attributes.from.startsWith('sip:') && !task.attributes.from.startsWith('client:')) {
+        // use customer phone number if present, otherwise the fallback number from payload is used
+        from = task.attributes.from;
+    }
+    
     try {
         if (sipTarget) {
-            await ConferenceService.coldTransferSip(callSid, to, sipTarget);
+            await ConferenceService.coldTransferSip(callSid, to, from, sipTarget);
         } else {
-            await ConferenceService.coldTransfer(callSid, to);
+            await ConferenceService.coldTransfer(callSid, to, from);
         }
     }
     catch(error){

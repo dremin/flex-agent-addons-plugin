@@ -6,6 +6,7 @@ exports.handler = async (context, event, callback) => {
       DialCallStatus,
       sipUser,
       sipTarget,
+      callerId,
       failoverAttempt
     } = event;
     
@@ -35,8 +36,9 @@ exports.handler = async (context, event, callback) => {
     
     const twiml = new Twilio.twiml.VoiceResponse();
     const dial = twiml.dial({
-      action: `https://${process.env.DOMAIN_NAME}/external-transfer/cold-transfer-sip-callback?failoverAttempt=${Number(failoverAttempt) + 1}&amp;sipTarget=${sipTarget}&amp;sipUser=${sipUser}`,
-      method: 'GET'
+      action: `https://${process.env.DOMAIN_NAME}/external-transfer/cold-transfer-sip-callback?failoverAttempt=${Number(failoverAttempt) + 1}&amp;sipTarget=${encodeURIComponent(sipTarget)}&amp;sipUser=${encodeURIComponent(sipUser)}&amp;callerId=${encodeURIComponent(callerId)}`,
+      method: 'GET',
+      callerId
     });
     dial.sip(toSip);
 

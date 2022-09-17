@@ -43,10 +43,20 @@ class DirectoryItem extends React.Component {
     onColdTransferClick = async (e) => {
         this.props.onTransferClick({ mode: "COLD" });
         
+        let from;
+        
+        if (this.props.phoneNumber) {
+            from = this.props.phoneNumber
+          }
+        else {
+            from = Manager.getInstance().serviceConfiguration.outbound_call_flows.default.caller_id;
+        }
+        
         Actions.invokeAction("CustomExternalTransferTask", {
           task: this.props.task,
           mode: 'COLD',
           to: this.props.item.phone,
+          from,
           sipTarget: this.props.item.sipTarget
         });
         

@@ -10,7 +10,8 @@ const retryHandler = (require(Runtime.getFunctions()['common/twilio-wrappers/ret
  * @param {object} parameters.context the context from calling lambda function
  * @param {string} parameters.callSid the unique call SID to fetch
  * @param {string} parameters.to the phone number to transfer to
- * @param {string} parameters.to the full SIP address to transfer to
+ * @param {string} parameters.toSip the full SIP address to transfer to
+ * @param {string} parameters.from the phone number for caller ID
  * @param {string} parameters.sipTarget SIP target array to use for forming SIP address
  * @param {string} parameters.failoverAttempt how many times we've failed over
  * @returns {object} generic response object
@@ -18,7 +19,7 @@ const retryHandler = (require(Runtime.getFunctions()['common/twilio-wrappers/ret
  */
 exports.coldTransferSip = async (parameters) => {
     
-    const { context, callSid, to, toSip, sipTarget, failoverAttempt } = parameters;
+    const { context, callSid, to, toSip, from, sipTarget, failoverAttempt } = parameters;
 
     if(!isObject(context))
         throw "Invalid parameters object passed. Parameters must contain reason context object";
@@ -28,6 +29,8 @@ exports.coldTransferSip = async (parameters) => {
         throw "Invalid parameters object passed. Parameters must contain to string";
     if(!isString(toSip))
         throw "Invalid parameters object passed. Parameters must contain toSip string";
+    if(!isString(from))
+        throw "Invalid parameters object passed. Parameters must contain from string";
     if(!isString(sipTarget))
         throw "Invalid parameters object passed. Parameters must contain sipTarget string";
     if(!isNumber(failoverAttempt))
@@ -37,7 +40,7 @@ exports.coldTransferSip = async (parameters) => {
         const client = context.getTwilioClient();
         
         const twiml = `<Response>
-        <Dial action="https://${process.env.DOMAIN_NAME}/external-transfer/cold-transfer-sip-callback?failoverAttempt=${failoverAttempt + 1}&amp;sipTarget=${sipTarget}&amp;sipUser=${to}" method="GET">
+        <Dial action="https://${process.env.DOMAIN_NAME}/external-transfer/cold-transfer-sip-callback?failoverAttempt=${failoverAttempt + 1}&amp;sipTarget=${encodeURIComponent(sipTarget)}&amp;sipUser=${encodeURIComponent(to)}&amp;callerId=${encodeURIComponent(from)}" method="GET" callerId="${from}">
         <Sip>${toSip}</Sip>
         </Dial>
         </Response>`;
