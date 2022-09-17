@@ -47,9 +47,7 @@ export const beforeHangupCall = (payload) => {
   HangUpByHelper.setHangUpBy(payload.sid, HangUpBy.Agent);
 }
 
-export const beforeCompleteTask = async (payload) => {
-  const task = TaskHelper.getTaskByTaskSid(payload.sid);
-  
+export const beforeCompleteTask = async (payload, attributes) => {
   let currentHangUpBy = HangUpByHelper.getHangUpBy()[payload.sid];
   
   if (!currentHangUpBy) {
@@ -63,7 +61,8 @@ export const beforeCompleteTask = async (payload) => {
     HangUpByHelper.setHangUpBy(payload.sid, currentHangUpBy);
   }
   
-  await HangUpByHelper.setHangUpByAttribute(task.taskSid, task.attributes, currentHangUpBy);
+  attributes.conversations.hang_up_by = currentHangUpBy;
+  return attributes;
 }
 
 export const CustomExternalTransferTask = async (payload) => {

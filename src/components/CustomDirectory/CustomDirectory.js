@@ -59,7 +59,6 @@ import DirectoryItem from './DirectoryItem';
                 >
                 {console.warn('Directory entries:', this.filteredDirectory())}
                 {this.filteredDirectory().map(item => {
-                    console.warn('Directory item:', item);
                     return (
                     <DirectoryItem
                         item={item}

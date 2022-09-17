@@ -1,9 +1,10 @@
-import { Actions, Notifications, StateHelper } from '@twilio/flex-ui';
+import { Actions, Manager, Notifications, StateHelper, TaskHelper } from '@twilio/flex-ui';
 import * as ExternalTransferActions from './externalTransfer';
 import * as HangUpByActions from './hangUpBy';
 import * as HoldTimeActions from './holdTime';
 import * as InternalTransferActions from './internalTransfer';
 import ConferenceService from '../services/ConferenceService';
+import TaskRouterService from '../services/TaskRouterService';
 import { CustomNotifications } from '../notifications';
 
 export default (manager) => {
@@ -134,8 +135,22 @@ export default (manager) => {
   });
   
   Actions.addListener("beforeCompleteTask", async (payload) => {
-    await HangUpByActions.beforeCompleteTask(payload);
-    await HoldTimeActions.beforeCompleteTask(payload);
+    let attributes = { conversations: {} };
+    
+    attributes = await HangUpByActions.beforeCompleteTask(payload, attributes);
+    attributes = await HoldTimeActions.beforeCompleteTask(payload, attributes);
+    
+    const { attributes: workerAttributes } = Manager.getInstance().workerClient;
+    attributes.conversations.conversation_attribute_9 = workerAttributes.location;
+    attributes.conversations.conversation_attribute_10 = workerAttributes.manager;
+    
+    try {
+      const task = TaskHelper.getTaskByTaskSid(payload.sid);
+      await TaskRouterService.updateTaskAttributes(task.taskSid, attributes);
+      console.log(`Set conversation attributes for ${task.taskSid}`, attributes);
+    } catch (error) {
+      console.log(`Failed to set conversation attributes for ${task.taskSid}`, error);
+    }
   });
   
   Actions.registerAction("CustomExternalTransferTask", async (payload) => {

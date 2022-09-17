@@ -13,6 +13,13 @@ import { Actions as QueueHoopsActions} from './states/QueueHoopsState';
 import { handlebars, queueHoops } from './helpers';
 import { initializeStrings } from './strings';
 import TaskRouterService from './services/TaskRouterService';
+import { injectGlobal } from '@emotion/css';
+
+// Increasing the width of the Team View WorkerPanel to show full skill name
+import global from './styles/global.css';
+injectGlobal`
+  ${global}
+`;
 
 const PLUGIN_NAME = 'AgentAddonsPlugin';
 

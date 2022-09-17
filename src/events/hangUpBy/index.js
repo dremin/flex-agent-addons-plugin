@@ -1,7 +1,7 @@
 import { hangUpBy as HangUpByHelper } from '../../helpers';
 import { HangUpBy } from '../../enums';
 
-export const taskWrapup = async (task) => {
+export const taskWrapup = async (task, attributes) => {
   console.log('taskWrapup', task);
   
   let currentHangUpBy = HangUpByHelper.getHangUpBy()[task.sid];
@@ -23,7 +23,7 @@ export const taskWrapup = async (task) => {
       // If the task has the destination attribute, this was a warm transfer
       currentHangUpBy = HangUpBy.ExternalWarmTransfer;
       HangUpByHelper.setHangUpBy(task.sid, currentHangUpBy);
-      await HangUpByHelper.setHangUpByAttribute(task.taskSid, task.attributes, currentHangUpBy);
+      attributes.conversations.hang_up_by = currentHangUpBy;
       break;
     case HangUpBy.ColdTransfer:
     case HangUpBy.ExternalColdTransfer:
@@ -33,19 +33,21 @@ export const taskWrapup = async (task) => {
       // Or, the external party left before the call ended, and the customer ended the call later.
       currentHangUpBy = HangUpBy.Customer;
       HangUpByHelper.setHangUpBy(task.sid, currentHangUpBy);
-      await HangUpByHelper.setHangUpByAttribute(task.taskSid, task.attributes, currentHangUpBy);
+      attributes.conversations.hang_up_by = currentHangUpBy;
       break;
     case HangUpBy.WarmTransfer:
       // If there's no other worker but we got here, someone hung up and it wasn't us!
       if (!HangUpByHelper.hasAnotherWorkerJoined(task)) {
         currentHangUpBy = HangUpBy.Customer;
         HangUpByHelper.setHangUpBy(task.sid, currentHangUpBy);
-        await HangUpByHelper.setHangUpByAttribute(task.taskSid, task.attributes, currentHangUpBy);
+        attributes.conversations.hang_up_by = currentHangUpBy;
       }
       break;
     default:
-      await HangUpByHelper.setHangUpByAttribute(task.taskSid, task.attributes, currentHangUpBy);
+      attributes.conversations.hang_up_by = currentHangUpBy;
   }
+  
+  return attributes;
 }
 
 export const taskCompleted = async (task) => {

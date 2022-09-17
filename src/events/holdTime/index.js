@@ -3,7 +3,7 @@ import { HangUpBy } from '../../enums';
 import { holdTime as HoldTimeHelper } from '../../helpers';
 import SyncClient from "../../services/SyncIPCClient";
 
-export const taskWrapup = async (task) => {
+export const taskWrapup = async (task, attributes) => {
   const key = `${task.sid}_HoldTime`;
   
   try {
@@ -21,11 +21,13 @@ export const taskWrapup = async (task) => {
       data = newDoc.data;
     }
     
-    await HoldTimeHelper.writeHoldData(task.taskSid, task.attributes, data.holdTime);
+    attributes.conversations.hold_time = data.holdTime;
     await SyncClient.closeSyncDoc();
   } catch (error) {
     console.error('Unable to update HoldTime during wrapup', error);
   }
+  
+  return attributes;
 }
 
 export const taskCompleted = async (task) => {

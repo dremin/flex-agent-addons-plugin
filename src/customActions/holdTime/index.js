@@ -1,6 +1,5 @@
 import { holdTime as HoldTimeHelper } from '../../helpers';
 import SyncClient from "../../services/SyncIPCClient";
-import { TaskHelper } from "@twilio/flex-ui";
 
 export const beforeHoldCall = async (payload) => {
   await HoldTimeHelper.startHold(payload.sid);
@@ -16,17 +15,22 @@ export const beforeTransferTask = async (payload) => {
   }
 }
 
-export const beforeCompleteTask = async (payload) => {
+export const beforeCompleteTask = async (payload, attributes) => {
   const key = `${payload.sid}_HoldTime`;
   
-  const doc = await SyncClient.getSyncDoc(key);
-  let { data } = doc;
-  
-  if (!data.holdTime) {
-    // no holds
-    data.holdTime = 0;
+  try {
+    const doc = await SyncClient.getSyncDoc(key);
+    let { data } = doc;
+    
+    if (!data.holdTime) {
+      // no holds
+      data.holdTime = 0;
+    }
+    
+    attributes.conversations.hold_time = data.holdTime;
+  } catch (error) {
+    console.error('Error adding hold_time attribute during beforeCompleteTask', error);
   }
   
-  const task = TaskHelper.getTaskByTaskSid(payload.sid);
-  await HoldTimeHelper.writeHoldData(task.taskSid, task.attributes, data.holdTime);
+  return attributes;
 }
