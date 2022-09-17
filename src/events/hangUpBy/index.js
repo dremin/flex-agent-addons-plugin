@@ -23,7 +23,6 @@ export const taskWrapup = async (task, attributes) => {
       // If the task has the destination attribute, this was a warm transfer
       currentHangUpBy = HangUpBy.ExternalWarmTransfer;
       HangUpByHelper.setHangUpBy(task.sid, currentHangUpBy);
-      attributes.conversations.hang_up_by = currentHangUpBy;
       break;
     case HangUpBy.ColdTransfer:
     case HangUpBy.ExternalColdTransfer:
@@ -33,20 +32,19 @@ export const taskWrapup = async (task, attributes) => {
       // Or, the external party left before the call ended, and the customer ended the call later.
       currentHangUpBy = HangUpBy.Customer;
       HangUpByHelper.setHangUpBy(task.sid, currentHangUpBy);
-      attributes.conversations.hang_up_by = currentHangUpBy;
       break;
+    case HangUpBy.Consult:
     case HangUpBy.WarmTransfer:
       // If there's no other worker but we got here, someone hung up and it wasn't us!
-      if (!HangUpByHelper.hasAnotherWorkerJoined(task)) {
+      //if (!HangUpByHelper.hasAnotherWorkerJoined(task)) {
+      if (!(await HangUpByHelper.hasCustomerJoined(task))) {
         currentHangUpBy = HangUpBy.Customer;
         HangUpByHelper.setHangUpBy(task.sid, currentHangUpBy);
-        attributes.conversations.hang_up_by = currentHangUpBy;
       }
       break;
-    default:
-      attributes.conversations.hang_up_by = currentHangUpBy;
   }
   
+  attributes.conversations.hang_up_by = currentHangUpBy;
   return attributes;
 }
 
@@ -60,7 +58,7 @@ export const taskCompleted = async (task) => {
     // Insights has grabbed the [Cold/Warm]Transfer value already at this point
     
     // Double-check that the customer is still here
-    if (HangUpByHelper.hasAnotherNonWorkerJoined(task)) {
+    if (await HangUpByHelper.hasAnotherNonWorkerJoined(task)) {
       currentHangUpBy = HangUpBy.Customer;
       await HangUpByHelper.setHangUpByAttribute(task.taskSid, task.attributes, currentHangUpBy);
     }

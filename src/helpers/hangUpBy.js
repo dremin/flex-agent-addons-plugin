@@ -1,4 +1,5 @@
 import TaskRouterService from '../services/TaskRouterService';
+import ConferenceService from '../services/ConferenceService';
 import * as Flex from "@twilio/flex-ui";
 
 const STORAGE_KEY = 'hang_up_by';
@@ -31,14 +32,29 @@ export const hasExternalJoined = (task) => {
   return false;
 }
 
-export const hasAnotherNonWorkerJoined = (task) => {
+export const hasAnotherNonWorkerJoined = async (task) => {
   // Task passed to us from taskCompleted event may not have updated conference info
-  let conference = Flex.Manager.getInstance().store.getState().flex.conferences.states[task.taskSid];
+  let conference = Flex.Manager.getInstance().store.getState().flex.conferences.states.get(task.taskSid);
   
-  if (conference) {
-    const otherJoinedNonWorkers = conference.participants.filter(p => p.participantType !== "worker" && p.status === "joined");
+  if (conference && conference.source) {
+    const otherNonWorkers = conference.source.participants.filter(p => p.participantType !== "worker");
     
-    if (otherJoinedNonWorkers.length > 0) {
+    let joinedNonWorkers = false;
+    
+    for (const p of otherNonWorkers) {
+      try {
+        const response = await ConferenceService.fetchParticipant(conference.source.conferenceSid, p.callSid);
+        
+        if (response.participantsResponse && response.participantsResponse.status === "connected") {
+          joinedNonWorkers = true;
+          break;
+        }
+      } catch (error) {
+        console.log('Unable to get participant from conference, it probably ended', error);
+      }
+    }
+    
+    if (joinedNonWorkers === true) {
       return true;
     }
   }
@@ -54,6 +70,36 @@ export const hasAnotherWorkerJoined = (task) => {
     const otherJoinedWorkers = task.conference.participants.filter(p => p.participantType === "worker" && !p.isCurrentWorker && p.status === "joined");
     
     if (otherJoinedWorkers.length > 0) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
+export const hasCustomerJoined = async (task) => {
+  // Task passed to us from taskCompleted event may not have updated conference info
+  let conference = Flex.Manager.getInstance().store.getState().flex.conferences.states.get(task.taskSid);
+  
+  if (conference && conference.source) {
+    const customers = conference.source.participants.filter(p => p.participantType === "customer");
+    
+    let joinedCustomers = false;
+    
+    for (const p of customers) {
+      try {
+        const response = await ConferenceService.fetchParticipant(conference.source.conferenceSid, p.callSid);
+        
+        if (response.participantsResponse && response.participantsResponse.status === "connected") {
+          joinedCustomers = true;
+          break;
+        }
+      } catch (error) {
+        console.log('Unable to get participant from conference, it probably ended', error);
+      }
+    }
+    
+    if (joinedCustomers === true) {
       return true;
     }
   }
