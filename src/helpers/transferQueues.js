@@ -1,6 +1,7 @@
 import { Manager } from '@twilio/flex-ui';
 
 import { utils } from '../helpers';
+import { namespace } from '../states';
 
 const manager = Manager.getInstance();
 const maxExpressionArraySize = 29;
@@ -45,7 +46,7 @@ const generateLobAndChannelQueueFilterExpression = (queueName, taskChannelName) 
   const internalTransferAddonsPluginConfig = manager.serviceConfiguration.ui_attributes?.internalTransferAddonsPlugin;
   const lobTransferQueueFilter = internalTransferAddonsPluginConfig?.lobTransferQueueFilter || {};
   const channelTransferQueueFilter = internalTransferAddonsPluginConfig?.channelTransferQueueFilter || {};
-  const queueHoops = manager.store.getState()['internal-transfer-addons']?.queueHoops || {};
+  const queueHoops = manager.store.getState()[namespace]?.queueHoops || {};
   const queueList = Object.values(queueHoops).flatMap(v => v.friendlyName ? v.friendlyName : []);
 
   let expression = "";
