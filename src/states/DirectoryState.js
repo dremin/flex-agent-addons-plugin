@@ -5,7 +5,7 @@ const GET_DIRECTORY_LIST = "GET_DIRECTORY_LIST";
 
 const initialState = {
   SelectedDirectory: "",
-  directoryList: {},
+  directoryList: [],
   response_status: "Pending",
   error: "",
 };
