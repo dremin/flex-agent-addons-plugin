@@ -8,7 +8,7 @@ A Twilio Flex Plugin allow you to customize the appearance and behavior of [Twil
 
 ### Custom directory
 
-When in a call, a new "Directory" tab is added to the transfer panel to allow cold transfers (and optionally warm transfers) to custom defined contacts. Both warm and cold transfers from the directory are accomplished by calling Twilio Functions to perform the required Twilio API requests. The directory's contents are loaded via a directory JSON file. Here is an example file:
+When in a call, a new "Directory" tab is added to the transfer panel to allow cold transfers (and optionally warm transfers) to custom defined contacts. Both warm and cold transfers from the directory are accomplished by calling Twilio Functions to perform the required Twilio API requests. The directory's contents are loaded via a directory JSON file [specified in the Flex UI Configuration](#flex-ui-configuration). Here is an example file:
 
 ```
 [
