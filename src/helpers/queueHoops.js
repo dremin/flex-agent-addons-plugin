@@ -5,8 +5,10 @@ import { DaysOfWeek } from '../enums';
 const manager = Manager.getInstance();
 
 const getHoopsAsset = async (myTz) => {
-  const serverlessDomain = manager.serviceConfiguration.ui_attributes.domainName;
-  const fetchUrl = `https://${serverlessDomain}/internal-transfer-addons/fetch-queue-hoops`;
+  // Providing separate serverless domain option so queue hoops can be easily
+  // made editable from the console for ease of admin management
+  const serverlessDomain = manager.serviceConfiguration.ui_attributes.internalTransferAddonsPlugin.queueHoopsDomainName;
+  const fetchUrl = `https://${serverlessDomain}/fetch-queue-hoops`;
 
   const fetchBody = {
     Token: manager.store.getState().flex.session.ssoTokenPayload.token,
