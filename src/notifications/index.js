@@ -8,7 +8,8 @@ export default (flex, manager) => {
 export const CustomNotifications = {
 	FailedHangupNotification: "PS_FailedHangupOnConferenceWithExternalParties",
 	transferQueueClosed: 'TransferQueueClosed',
-	transferQueueHoliday: 'TransferQueueHoliday'
+	transferQueueHoliday: 'TransferQueueHoliday',
+	DirectoryLoadNotification: "DirectoryLoadNotification"
 }
 
 function registerCustomNotifications(flex, manager) {
@@ -47,5 +48,12 @@ function registerCustomNotifications(flex, manager) {
 		content: CustomNotifications.transferQueueHoliday,
 		timeout: queueClosedNotificationTimeoutMs,
 		type: Flex.NotificationType.warning
+	});
+
+	flex.Notifications.registerNotification({
+		id: CustomNotifications.DirectoryLoadNotification,
+		type: Flex.NotificationType.error,
+		content: "Unable to load custom transfer directory. Please notify your system administrator.",
+		timeout: 10000
 	});
 }
